@@ -46,24 +46,37 @@ namespace MegameTestTask.Editor
             foreach (var singleMeshStats in meshStats)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(singleMeshStats.Name, GUILayout.Width(NameFieldWidth));
-                GUILayout.Label(singleMeshStats.VertexCount.ToString(), GUILayout.Width(VertexCountFieldWidth));
-                GUILayout.Label(singleMeshStats.PolygonCount.ToString(), GUILayout.Width(PolygonCountFieldWidth));
-                GUILayout.Label(singleMeshStats.UsesInScene.ToString(), GUILayout.Width(UsesInSceneFieldWidth));
-                GUILayout.Label(singleMeshStats.VertexSumInScene.ToString(), GUILayout.Width(VertexSumInSceneFieldWidth));
-                bool isReadablePreviousValue = singleMeshStats.IsReadable;
-                bool isReadableNewValue =
-                    GUILayout.Toggle(isReadablePreviousValue, string.Empty, GUILayout.Width(ReadableFieldWidth));
-                if (isReadablePreviousValue != isReadableNewValue)
-                {
-                    string path = AssetDatabase.GetAssetPath(singleMeshStats.SharedMesh);
-                    ModelImporter importer = (ModelImporter)ModelImporter.GetAtPath(path);
-                    importer.isReadable = isReadableNewValue;
-                    AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+                
+                    GUILayout.Label(singleMeshStats.Name, GUILayout.Width(NameFieldWidth));
+                    GUILayout.Label(singleMeshStats.VertexCount.ToString(), GUILayout.Width(VertexCountFieldWidth));
+                    GUILayout.Label(singleMeshStats.PolygonCount.ToString(), GUILayout.Width(PolygonCountFieldWidth));
+                    GUILayout.Label(singleMeshStats.UsesInScene.ToString(), GUILayout.Width(UsesInSceneFieldWidth));
+                    GUILayout.Label(singleMeshStats.VertexSumInScene.ToString(), GUILayout.Width(VertexSumInSceneFieldWidth));
+
+                    EditorGUI.BeginDisabledGroup(!singleMeshStats.HasImporter);
+                        
+                        bool isReadablePreviousValue = singleMeshStats.IsReadable;
+                        bool isReadableNewValue =
+                            GUILayout.Toggle(isReadablePreviousValue, string.Empty, GUILayout.Width(ReadableFieldWidth));
+                        if (isReadablePreviousValue != isReadableNewValue)
+                        {
+                            singleMeshStats.Importer.isReadable = isReadableNewValue;
+                            AssetDatabase.ImportAsset(singleMeshStats.Path, ImportAssetOptions.ForceUpdate);
+                            UpdateData();
+                        }
+
+                        bool uvLightmapPreviousValue = singleMeshStats.UVLightmap;
+                        bool uvLightmapNewValue =
+                            GUILayout.Toggle(uvLightmapPreviousValue, string.Empty, GUILayout.Width(UVLightmapFieldWidth));
+                        if (uvLightmapPreviousValue != uvLightmapNewValue)
+                        {
+                            singleMeshStats.Importer.generateSecondaryUV = uvLightmapNewValue;
+                            AssetDatabase.ImportAsset(singleMeshStats.Path, ImportAssetOptions.ForceUpdate);
+                            UpdateData();
+                        }
+                        
+                    EditorGUI.EndDisabledGroup();
                     
-                    UpdateData();
-                }
-                GUILayout.Toggle(singleMeshStats.UVLightmap, string.Empty, GUILayout.Width(UVLightmapFieldWidth));
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndScrollView();
@@ -94,7 +107,13 @@ namespace MegameTestTask.Editor
                     newMeshStats.PolygonCount = newMeshStats.SharedMesh.triangles.Length;
                     newMeshStats.UsesInScene = 1;
                     newMeshStats.IsReadable = newMeshStats.SharedMesh.isReadable;
-                    //newMeshStats.UVLightmap = 
+                    newMeshStats.Path = AssetDatabase.GetAssetPath(newMeshStats.SharedMesh);
+                    newMeshStats.Importer = (ModelImporter)ModelImporter.GetAtPath(newMeshStats.Path);
+                    newMeshStats.HasImporter = newMeshStats.Importer != null;
+                    if (newMeshStats.HasImporter)
+                    {
+                        newMeshStats.UVLightmap = newMeshStats.Importer.generateSecondaryUV;
+                    }
                     meshStats.Add(newMeshStats);
                 }
             }
@@ -109,9 +128,13 @@ namespace MegameTestTask.Editor
             public int VertexCount;
             public int PolygonCount;
             public int UsesInScene;
-            public int VertexSumInScene => VertexCount * UsesInScene;
             public bool IsReadable;
             public bool UVLightmap;
+            public ModelImporter Importer;
+            public string Path;
+            public bool HasImporter;
+            
+            public int VertexSumInScene => VertexCount * UsesInScene;
         }
     }
 }
