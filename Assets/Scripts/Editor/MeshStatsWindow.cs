@@ -51,7 +51,18 @@ namespace MegameTestTask.Editor
                 GUILayout.Label(singleMeshStats.PolygonCount.ToString(), GUILayout.Width(PolygonCountFieldWidth));
                 GUILayout.Label(singleMeshStats.UsesInScene.ToString(), GUILayout.Width(UsesInSceneFieldWidth));
                 GUILayout.Label(singleMeshStats.VertexSumInScene.ToString(), GUILayout.Width(VertexSumInSceneFieldWidth));
-                GUILayout.Toggle(singleMeshStats.IsReadable, string.Empty, GUILayout.Width(ReadableFieldWidth));
+                bool isReadablePreviousValue = singleMeshStats.IsReadable;
+                bool isReadableNewValue =
+                    GUILayout.Toggle(isReadablePreviousValue, string.Empty, GUILayout.Width(ReadableFieldWidth));
+                if (isReadablePreviousValue != isReadableNewValue)
+                {
+                    string path = AssetDatabase.GetAssetPath(singleMeshStats.SharedMesh);
+                    ModelImporter importer = (ModelImporter)ModelImporter.GetAtPath(path);
+                    importer.isReadable = isReadableNewValue;
+                    AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate);
+                    
+                    UpdateData();
+                }
                 GUILayout.Toggle(singleMeshStats.UVLightmap, string.Empty, GUILayout.Width(UVLightmapFieldWidth));
                 GUILayout.EndHorizontal();
             }
