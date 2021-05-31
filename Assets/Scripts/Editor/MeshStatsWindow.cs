@@ -82,6 +82,8 @@ namespace MegameTestTask.Editor
                     newMeshStats.VertexCount = newMeshStats.SharedMesh.vertexCount;
                     newMeshStats.PolygonCount = newMeshStats.SharedMesh.triangles.Length;
                     newMeshStats.UsesInScene = 1;
+                    newMeshStats.IsReadable = newMeshStats.SharedMesh.isReadable;
+                    //newMeshStats.UVLightmap = 
                     meshStats.Add(newMeshStats);
                 }
             }
