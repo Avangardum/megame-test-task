@@ -18,6 +18,8 @@ namespace MegameTestTask.Editor
 
         private const int UpdateDataEveryXFrames = 10;
 
+        private static GUIStyle labelLikeButtonStyle;
+
         private List<SingleMeshStats> _meshStats;
         private Vector2 scrollPosition;
         
@@ -27,6 +29,14 @@ namespace MegameTestTask.Editor
             var window = EditorWindow.GetWindow<MeshStatsWindow>();
             window.UpdateData();
             window.Show();
+            
+            labelLikeButtonStyle = new GUIStyle();
+            var border = labelLikeButtonStyle.border;
+            border.left = 0;
+            border.top = 0;
+            border.right = 0;
+            border.bottom = 0;
+            labelLikeButtonStyle.normal.textColor = Color.Lerp(Color.white, Color.black, 0.2f);
         }
 
         private void OnGUI()
@@ -51,15 +61,20 @@ namespace MegameTestTask.Editor
             foreach (var singleMeshStats in meshStats)
             {
                 GUILayout.BeginHorizontal();
-                
-                    GUILayout.Label(singleMeshStats.Name, GUILayout.Width(NameFieldWidth));
+                    bool focus = GUILayout.Button(singleMeshStats.Name, labelLikeButtonStyle, GUILayout.Width(NameFieldWidth));
+                    if (focus)
+                    {
+                        Selection.activeGameObject = FindObjectsOfType<MeshFilter>()
+                            .First(x => x.sharedMesh == singleMeshStats.SharedMesh)
+                            .gameObject;
+                        SceneView.FrameLastActiveSceneView();
+                    }
                     GUILayout.Label(singleMeshStats.VertexCount.ToString(), GUILayout.Width(VertexCountFieldWidth));
                     GUILayout.Label(singleMeshStats.PolygonCount.ToString(), GUILayout.Width(PolygonCountFieldWidth));
                     GUILayout.Label(singleMeshStats.UsesInScene.ToString(), GUILayout.Width(UsesInSceneFieldWidth));
                     GUILayout.Label(singleMeshStats.VertexSumInScene.ToString(), GUILayout.Width(VertexSumInSceneFieldWidth));
 
                     EditorGUI.BeginDisabledGroup(!singleMeshStats.HasImporter);
-                        
                         bool isReadablePreviousValue = singleMeshStats.IsReadable;
                         bool isReadableNewValue =
                             GUILayout.Toggle(isReadablePreviousValue, string.Empty, GUILayout.Width(ReadableFieldWidth));
@@ -79,9 +94,7 @@ namespace MegameTestTask.Editor
                             AssetDatabase.ImportAsset(singleMeshStats.Path, ImportAssetOptions.ForceUpdate);
                             UpdateData();
                         }
-                        
                     EditorGUI.EndDisabledGroup();
-                    
                 GUILayout.EndHorizontal();
             }
             GUILayout.EndScrollView();
