@@ -16,6 +16,8 @@ namespace MegameTestTask.Editor
         private const int ReadableFieldWidth = 60;
         private const int UVLightmapFieldWidth = 80;
 
+        private const int UpdateDataEveryXFrames = 10;
+
         private List<SingleMeshStats> _meshStats;
         private Vector2 scrollPosition;
         
@@ -29,7 +31,10 @@ namespace MegameTestTask.Editor
 
         private void OnGUI()
         {
-            UpdateData();
+            if (Time.renderedFrameCount % UpdateDataEveryXFrames == 0)
+            {
+                UpdateData();
+            }
             
             GUILayout.BeginHorizontal();
                 GUILayout.Label("Name", GUILayout.Width(NameFieldWidth));
