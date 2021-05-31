@@ -109,7 +109,7 @@ namespace MegameTestTask.Editor
                     newMeshStats.SharedMesh = meshFilter.sharedMesh;
                     newMeshStats.Name = newMeshStats.SharedMesh.name;
                     newMeshStats.VertexCount = newMeshStats.SharedMesh.vertexCount;
-                    newMeshStats.PolygonCount = newMeshStats.SharedMesh.triangles.Length;
+                    newMeshStats.PolygonCount = newMeshStats.SharedMesh.triangles.Length / 3;
                     newMeshStats.UsesInScene = 1;
                     newMeshStats.IsReadable = newMeshStats.SharedMesh.isReadable;
                     newMeshStats.Path = AssetDatabase.GetAssetPath(newMeshStats.SharedMesh);
