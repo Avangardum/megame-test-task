@@ -15,12 +15,12 @@ namespace MegameTestTask.Editor
         private const int VerticesSumInSceneFieldWidth = 130;
         private const int ReadableFieldWidth = 60;
         private const int UVLightmapFieldWidth = 80;
-        private const int FilteringLabelWidth = 100;
+        private const int FilteringAndSortingLabelWidth = 100;
         private const int FilteringStringFieldWidth = 200;
         private const int FilteringMinMaxLabelWidth = 30;
         private const int FilteringIntFieldWidth = 50;
         private const int ToggleWidth = 15;
-        private const int EnumPopupWidth = 100;
+        private const int EnumPopupWidth = 160;
 
         private const int UpdateDataEveryXFrames = 10;
 
@@ -46,11 +46,14 @@ namespace MegameTestTask.Editor
         private int maxVerticesSumInScene;
         private RequiredBool requiredReadable;
         private RequiredBool requiredUVLightmap;
+
+        private SortingMode sortingMode;
+        private SortingOrder sortingOrder;
         
         [MenuItem("Window/Mesh Stats")]
         public static void Init()
         {
-            var window = EditorWindow.GetWindow<MeshStatsWindow>();
+            var window = EditorWindow.GetWindow<MeshStatsWindow>("Mesh stats");
             window.UpdateData();
             window.Show();
             
@@ -66,7 +69,10 @@ namespace MegameTestTask.Editor
         private void OnGUI()
         {
             DrawTable();
+            EditorGUILayout.Space();
             DrawFiltering();
+            EditorGUILayout.Space();
+            DrawSorting();
             
             
             void DrawTable()
@@ -88,6 +94,7 @@ namespace MegameTestTask.Editor
                 
                 var meshStats = GetMeshStats();
                 FilterMeshStats();
+                SortMeshStats();
                 scrollPosition = GUILayout.BeginScrollView(scrollPosition);
                 foreach (var singleMeshStats in meshStats)
                 {
@@ -180,6 +187,39 @@ namespace MegameTestTask.Editor
                             .ToList();
                     }
                 }
+
+                void SortMeshStats()
+                {
+                    switch (sortingMode)
+                    {
+                        case SortingMode.Name:
+                            meshStats.Sort((x, y) => string.Compare(x.Name, y.Name));
+                            break;
+                        case SortingMode.VerticesCount:
+                            meshStats.Sort((x, y) => x.VerticesCount.CompareTo(y.VerticesCount));
+                            break;
+                        case SortingMode.PolygonsCount:
+                            meshStats.Sort((x, y) => x.PolygonsCount.CompareTo(y.PolygonsCount));
+                            break;
+                        case SortingMode.UsesInScene:
+                            meshStats.Sort((x, y) => x.UsesInScene.CompareTo(y.UsesInScene));
+                            break;
+                        case SortingMode.VerticesSumInScene:
+                            meshStats.Sort((x, y) => x.VerticesSumInScene.CompareTo(y.VerticesSumInScene));
+                            break;
+                        case SortingMode.Readable:
+                            meshStats.Sort((x, y) => x.IsReadable.CompareTo(y.IsReadable));
+                            break;
+                        case SortingMode.UVLightmap:
+                            meshStats.Sort((x, y) => x.UVLightmap.CompareTo(y.UVLightmap));
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
+
+                    if (sortingOrder == SortingOrder.Descending)
+                        meshStats.Reverse();
+                }
             }
 
             void DrawFiltering()
@@ -187,7 +227,7 @@ namespace MegameTestTask.Editor
                 EditorGUILayout.LabelField("Filtering", EditorStyles.boldLabel);
                 EditorGUILayout.BeginHorizontal();
                     filterByName = EditorGUILayout.Toggle(filterByName, GUILayout.Width(ToggleWidth));
-                    EditorGUILayout.LabelField("Name", GUILayout.Width(FilteringLabelWidth));
+                    EditorGUILayout.LabelField("Name", GUILayout.Width(FilteringAndSortingLabelWidth));
                     EditorGUI.BeginDisabledGroup(!filterByName);
                         nameFilter = EditorGUILayout.TextField(nameFilter, GUILayout.Width(FilteringStringFieldWidth));
                     EditorGUI.EndDisabledGroup();
@@ -204,7 +244,7 @@ namespace MegameTestTask.Editor
                 {
                     EditorGUILayout.BeginHorizontal();
                         isFilteringActive = EditorGUILayout.Toggle(isFilteringActive, GUILayout.Width(ToggleWidth));
-                        EditorGUILayout.LabelField(label, GUILayout.Width(FilteringLabelWidth));
+                        EditorGUILayout.LabelField(label, GUILayout.Width(FilteringAndSortingLabelWidth));
                         EditorGUI.BeginDisabledGroup(!isFilteringActive);
                             EditorGUILayout.LabelField("Min", GUILayout.Width(FilteringMinMaxLabelWidth));
                             min = EditorGUILayout.IntField(min, GUILayout.Width(FilteringIntFieldWidth));
@@ -217,10 +257,23 @@ namespace MegameTestTask.Editor
                 void DrawRequiredBoolLine(string label, ref RequiredBool requiredBool)
                 {
                     EditorGUILayout.BeginHorizontal();
-                        EditorGUILayout.LabelField(label, GUILayout.Width(FilteringLabelWidth));
+                        EditorGUILayout.LabelField(label, GUILayout.Width(FilteringAndSortingLabelWidth));
                         requiredBool = (RequiredBool)EditorGUILayout.EnumPopup(requiredBool, GUILayout.Width(EnumPopupWidth));
                     EditorGUILayout.EndHorizontal();
                 }
+            }
+
+            void DrawSorting()
+            {
+                EditorGUILayout.LabelField("Sorting", EditorStyles.boldLabel);
+                EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("Mode", GUILayout.Width(FilteringAndSortingLabelWidth));
+                    sortingMode = (SortingMode) EditorGUILayout.EnumPopup(sortingMode, GUILayout.Width(EnumPopupWidth));
+                EditorGUILayout.EndHorizontal();
+                EditorGUILayout.BeginHorizontal();
+                    EditorGUILayout.LabelField("Order", GUILayout.Width(FilteringAndSortingLabelWidth));
+                    sortingOrder = (SortingOrder) EditorGUILayout.EnumPopup(sortingOrder, GUILayout.Width(EnumPopupWidth));
+                EditorGUILayout.EndHorizontal();
             }
         }
 
@@ -284,6 +337,23 @@ namespace MegameTestTask.Editor
             Any = 0,
             True = 1,
             False = 2
+        }
+        
+        private enum SortingMode
+        {
+            Name,
+            VerticesCount,
+            PolygonsCount,
+            UsesInScene,
+            VerticesSumInScene,
+            Readable,
+            UVLightmap
+        }
+        
+        private enum SortingOrder
+        {
+            Ascending,
+            Descending
         }
     }
 }
