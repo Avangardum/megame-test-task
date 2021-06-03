@@ -37,6 +37,7 @@ namespace MegameTestTask.Editor
             GameObject cylinder = new GameObject("Cylinder");
             var meshFilter = cylinder.AddComponent<MeshFilter>();
             var meshRenderer = cylinder.AddComponent<MeshRenderer>();
+            var meshCollider = cylinder.AddComponent<MeshCollider>();
 
             Mesh mesh = new Mesh();
             float angleStep = 2 * Mathf.PI / VerticesInCircle;
@@ -106,6 +107,8 @@ namespace MegameTestTask.Editor
 
             meshFilter.mesh = mesh;
             meshRenderer.material = AssetDatabase.GetBuiltinExtraResource<Material>("Default-Material.mat");
+            meshCollider.sharedMesh = mesh;
+            meshCollider.convex = true;
             EditorUtility.SetDirty(cylinder);
             return cylinder;
         }
