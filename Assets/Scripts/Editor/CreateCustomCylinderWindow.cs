@@ -9,25 +9,43 @@ namespace MegameTestTask.Editor
 {
     public class CreateCustomCylinderWindow : EditorWindow
     {
-        private float height;
-        private float radius;
+        private CustomCylinderSettings preview;
+        
+        private float height = 3;
+        private float radius = 1;
         
         [MenuItem(itemName: "GameObject/Custom Cylinder", isValidateFunction: false, priority: 20)]
         public static void Init()
         {
             var window = EditorWindow.GetWindow<CreateCustomCylinderWindow>("Create custom cylinder");
             window.Show();
+            window.OnCreate();
         }
 
+        public void OnCreate()
+        {
+            preview = CreateCylinder().GetComponent<CustomCylinderSettings>();
+            preview.gameObject.name = "Custom cylinder preview";
+        }
+        
         private void OnGUI()
         {
             height = EditorGUILayout.FloatField("Height", height);
             radius = EditorGUILayout.FloatField("Radius", radius);
+            preview.VisibleMeshHeight = height;
+            preview.VisibleMeshRadius = radius;
+            preview.ColliderHeight = height;
+            preview.ColliderRadius = radius;
             bool create = GUILayout.Button("Create");
             if (create)
             {
                 CreateCylinder();
             }
+        }
+
+        private void OnDestroy()
+        {
+            DestroyImmediate(preview.gameObject);
         }
 
         private GameObject CreateCylinder()
